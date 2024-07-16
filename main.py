@@ -15,6 +15,8 @@ import smtplib
 import os
 
 # load_dotenv()
+# get year for footer
+YEAR=date.today().strftime("%Y")
 
 def admin_only(func):
     @wraps(func)
@@ -134,7 +136,7 @@ def register():
 
         login_user(new_user)
         return redirect(url_for('get_all_posts'))
-    return render_template("register.html", form=register_form)
+    return render_template("register.html", form=register_form, current_year=YEAR)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -154,7 +156,7 @@ def login():
             return redirect(url_for('login'))
         login_user(user)
         return redirect(url_for('get_all_posts'))
-    return render_template("login.html", form=login_form)
+    return render_template("login.html", form=login_form, current_year=YEAR)
 
 
 @app.route('/logout')
@@ -165,11 +167,9 @@ def logout():
 
 @app.route('/')
 def get_all_posts():
-    # get year for footer
-    year=date.today().strftime("%Y")
     result = db.session.execute(db.select(BlogPost))
     posts = result.scalars().all()
-    return render_template("index.html", all_posts=posts, current_year=year)
+    return render_template("index.html", all_posts=posts, current_year=YEAR)
 
 
 @app.route("/post/<int:post_id>", methods=["GET", "POST"])
@@ -188,7 +188,7 @@ def show_post(post_id):
         )
         db.session.add(new_comment)
         db.session.commit()
-    return render_template("post.html", post=requested_post, form=comment_form)
+    return render_template("post.html", post=requested_post, form=comment_form, current_year=YEAR)
 
 
 @app.route("/new-post", methods=["GET", "POST"])
@@ -207,7 +207,7 @@ def add_new_post():
         db.session.add(new_post)
         db.session.commit()
         return redirect(url_for("get_all_posts"))
-    return render_template("make-post.html", form=form)
+    return render_template("make-post.html", form=form, current_year=YEAR)
 
 
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
@@ -229,7 +229,7 @@ def edit_post(post_id):
         post.body = edit_form.body.data
         db.session.commit()
         return redirect(url_for("show_post", post_id=post.id))
-    return render_template("make-post.html", form=edit_form, is_edit=True)
+    return render_template("make-post.html", form=edit_form, is_edit=True, current_year=YEAR)
 
 
 @app.route("/delete/<int:post_id>")
@@ -243,7 +243,7 @@ def delete_post(post_id):
 
 @app.route("/about")
 def about():
-    return render_template("about.html")
+    return render_template("about.html", current_year=YEAR)
 
 # Contact Form (via SMTP)
 
