@@ -65,8 +65,8 @@ class User(UserMixin, db.Model):
     name: Mapped[str] = mapped_column(String(1000))
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String(100))
-    
-    #This will act like a List of BlogPost objects attached to each User. 
+
+    #This will act like a List of BlogPost objects attached to each User.
     #The "author" refers to the author property in the BlogPost class.
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
@@ -75,32 +75,32 @@ class User(UserMixin, db.Model):
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    
+
     # Create Foreign Key, "users.id" the users refers to the tablename of User.
     author_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("users.id"))
     # Create reference to the User object. The "posts" refers to the posts property in the User class.
     author = relationship("User", back_populates="posts")
-    
+
     title: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     subtitle: Mapped[str] = mapped_column(String(250), nullable=False)
     date: Mapped[str] = mapped_column(String(250), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
-    
+
     blog_comments = relationship("Comment", back_populates="parent_post")
-    
+
 class Comment(db.Model):
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     author_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("users.id"))
     comment_author = relationship("User", back_populates="comments")
-    
+
     # Create Foreign Key, "users.id" the users refers to the tablename of User.
     # Create reference to the User object. The "posts" refers to the posts property in the User class.
     post_id: Mapped[str] = mapped_column(Integer, db.ForeignKey("blog_posts.id"))
     text: Mapped[str] = mapped_column(Text, nullable=False)
     parent_post = relationship("BlogPost", back_populates="blog_comments")
-    
+
 
 with app.app_context():
     db.create_all()
@@ -110,7 +110,7 @@ with app.app_context():
 def register():
     register_form = RegisterForm()
     if  register_form.validate_on_submit():
-        # Hashing and salting the password entered by the user 
+        # Hashing and salting the password entered by the user
         hash_and_salted_password = generate_password_hash(
             register_form.password.data,
             method='pbkdf2:sha256',
@@ -165,9 +165,11 @@ def logout():
 
 @app.route('/')
 def get_all_posts():
+    # get year for footer
+    year=date.today().strftime("%Y")
     result = db.session.execute(db.select(BlogPost))
     posts = result.scalars().all()
-    return render_template("index.html", all_posts=posts)
+    return render_template("index.html", all_posts=posts, current_year=year)
 
 
 @app.route("/post/<int:post_id>", methods=["GET", "POST"])
@@ -265,5 +267,4 @@ def send_email(name, email, phone, message):
         connection.sendmail(MAIL_ADDRESS, MAIL_ADDRESS, email_message)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5002)
-
+    app.run(debug=False)  # app.run(debug=True, port=5002)
